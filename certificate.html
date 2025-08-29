@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Certificate Gallery</title>
+  <style>
+    :root {
+      --background-light: #e20bbe;
+      --background-dark: #ecc100;
+      --primary: #e35f3a;
+      --primary-dark: #fafbfd;
+      --white: #774074;
+      --text-primary: #e41414;
+      --text-secondary: #4afa05;
+      --pagination-shadow: rgba(0, 0, 0, 0.1) 8px 4px 12px,
+        rgba(0, 0, 0, 0.05) 8px 2px 8px;
+      --box-shadow: 8px 5px 15px rgba(197, 10, 243, 0.1);
+      --box-shadow-hover: 8px 10px 30px rgba(255, 9, 9, 0.15);
+      --font-family: 'Segoe UI', sans-serif;
+      --font-size-base: 16px;
+      --font-size-large: clamp(2rem, 4vw, 4rem);
+      --font-size-medium: 1.1rem;
+      --font-size-small: 0.875rem;
+
+      --bg-color:#000000;
+      --second-bg-color:#131313;
+      --text-color:white;
+      --main-color:#00ffee;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-size: var(--font-size-base);
+      font-family: var(--font-family);
+      background: var(--bg-color);
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    main {
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    #properties {
+      text-align: center;
+    }
+
+    #properties h2 {
+      color: var(--main-color);
+      font-size: var(--font-size-large);
+      margin-bottom: 1rem;
+      text-transform: capitalize;
+    }
+
+    #searchInput {
+      padding: 0.7rem 1rem;
+      width: 90%;
+      max-width: 400px;
+      margin-bottom: 2rem;
+      border: 1px solid #f18508;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .cards {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+
+    .cards article {
+      max-width: 300px;
+      width: 100%;
+      background: var(--white);
+      border-radius: 1rem;
+      box-shadow: var(--box-shadow);
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .cards article:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--primary);
+    }
+
+    .cards article figure {
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+    }
+
+    .cards article img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .article-preview {
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .article-preview h2 {
+      font-size: 1.4rem;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .article-preview p {
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .article-preview a {
+      display: inline-block;
+      margin-top: 0.7rem;
+      padding: 0.4rem 1rem;
+      background: var(--primary);
+      color: white;
+      border-radius: 0.4rem;
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+
+    .pagination_navigation {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      align-items: center;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .pagination_button {
+      padding: 0.5rem 1rem;
+      min-height: 3rem;
+      border-radius: 0.5rem;
+      color: var(--primary);
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+      text-decoration: none;
+      border: 1px solid var(--primary);
+      background: var(--white);
+    }
+
+    .pagination_button--disabled {
+      color: var(--text-secondary);
+      cursor: not-allowed;
+    }
+
+    #page {
+      display: flex;
+      gap: 0.5rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    #page a {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      background: var(--white);
+      color: var(--text-primary);
+      border: 1px solid #ccc;
+      text-decoration: none;
+    }
+
+    .pagination__link--active {
+      font-weight: bold;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      text-decoration: underline;
+    }
+
+    .pagination__dots {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 2rem;
+      font-size: 1.75rem;
+    }
+    .properties h3{
+      color: var(--main-color);
+      font-size: var(--font-size-large);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section id="properties">
+      <h3>Gained Certificates</h3>
+      <input type="text" id="searchInput" placeholder="Search certificates..." />
+      <div class="cards" aria-live="polite" aria-atomic="true"></div>
+
+      <nav class="pagination_navigation" role="navigation" aria-label="Pagination Navigation">
+        <a href="#" id="go-to-previous-page" class="pagination_button" aria-label="Go To Previous Page">Prev</a>
+        <ul id="page"></ul>
+        <a href="#" id="go-to-next-page" class="pagination_button" aria-label="Go To Next Page">Next</a>
+      </nav>
+    </section>
+  </main>
+
+
+  <script>
+    const cards = [
+      {
+        title: "Certificate of Excellence",
+        description: "Awarded for outstanding academic performance.",
+        image: "SAMARA KURAMI-page-001.jpg"
+      },
+      {
+        title: "Python Bootcamp",
+        description: "Successfully completed a 2-week intensive program.",
+        image: "Android hacking Samara kurami.jpg"
+      },
+      {
+        title: "Cloud Workshop",
+        description: "Introduction to AWS and cloud deployments.",
+        image: "pankaj kumar seo.jpeg"
+      },
+      {
+        title: "AI Workshop",
+        description: "Hands-on session on building neural networks.",
+        image: "Samara Kurami.png"
+      },
+      {
+        title: "Data Science Hackathon",
+        description: "Recognized for innovative solutions.",
+        image: "Samara Kurami_Google My Business (2)_page-0001.jpg"
+      },
+      {
+        title: "Cybersecurity Training",
+        description: "Completed ethical hacking and security essentials.",
+        image: "Samara Kurami Developing AI Applications with Python and Flask Coursera OL7ZXECH7XEV_page-0001.jpg"
+      },
+      {
+        title: "Web Dev Certificate",
+        description: "Created a complete full-stack application.",
+        image: "Samara kurami  Introduction to Web Development with HTML, CSS, JavaScript_page-0001.jpg"
+      },
+      {
+        title: "Java Programming",
+        description: "Core Java concepts and project submission.",
+        image: "LUEMDBMAY125975-page-001.jpg"
+      },
+      {
+        title: "Cloud Workshop",
+        description: "Introduction to AWS and cloud deployments.",
+        image: "event-certificate-1749962702-page-001.jpg"
+      },
+      {
+        title: "Cloud Workshop",
+        description: "Introduction to AWS and cloud deployments.",
+        image: "event-certificate-1749374394-page-001.jpg"
+      },
+      {
+        title: "Cloud Workshop",
+        description: "Introduction to AWS and cloud deployments.",
+        image: "Django Application Development with SQL and Databases-page-001.jpg"
+      },
+      {
+        title: "Cloud Workshop",
+        description: "Introduction to AWS and cloud deployments.",
+        image: "Developing AI Applications with Python and Flask-page-001.jpg"
+      },
+      {
+        title: "Cloud Workshop",
+        description: "Introduction to AWS and cloud deployments.",
+        image: "Coursera 7DY2AX3RWQXM-page-001.jpg"
+      },
+      {
+        title: "Cloud Workshop",
+        description: "Introduction to AWS and cloud deployments.",
+        image: "Coursera 3JGN174INRXR-page-001.jpg"
+      },
+      {
+        title: "Cloud Workshop",
+        description: "Introduction to AWS and cloud deployments.",
+        image: "Certificate_A4-landscape_1745552842430_page-0001.jpg"
+      },
+     
+
+    ];
+
+    let filteredCards = [...cards];
+    let itemsPerPage = 3;
+    let currentPage = 1;
+
+    const cardsElement = document.querySelector('.cards');
+    const previousPageButton = document.getElementById('go-to-previous-page');
+    const nextPageButton = document.getElementById('go-to-next-page');
+    const pagesContainer = document.getElementById('page');
+
+    const totalPages = () => Math.ceil(filteredCards.length / itemsPerPage);
+
+    const setButtonState = (button, isDisabled) => {
+      button.disabled = isDisabled;
+      button.classList.toggle('pagination_button--disabled', isDisabled);
+    };
+
+    const changeCards = (cardsList, pageIndex, itemsPerPage) => {
+      const startIndex = (pageIndex - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+
+      const cardsToShow = cardsList.slice(startIndex, endIndex);
+      cardsElement.innerHTML = cardsToShow
+        .map(card => `
+          <article>
+            <figure>
+              <img src="${card.image}" alt="${card.title}" onerror="this.src='https://source.unsplash.com/400x300/?certificate';">
+            </figure>
+            <div class="article-preview">
+              <h2>${card.title}</h2>
+              <p>${card.description}</p>
+              <a href="${card.image}" download>Download</a>
+            </div>
+          </article>
+        `).join('');
+
+      currentPage = pageIndex;
+      setButtonState(previousPageButton, currentPage === 1);
+      setButtonState(nextPageButton, currentPage === totalPages());
+      generatePageLinks();
+    };
+
+    const generatePageLinks = () => {
+      pagesContainer.innerHTML = '';
+      const maxVisiblePages = 3;
+      let pages = [];
+      const pageCount = totalPages();
+
+      if (pageCount <= maxVisiblePages + 2) {
+        for (let i = 1; i <= pageCount; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        let start = Math.max(2, currentPage - 1);
+        let end = Math.min(pageCount - 1, currentPage + 1);
+
+        if (start > 2) pages.push('...');
+        for (let i = start; i <= end; i++) pages.push(i);
+        if (end < pageCount - 1) pages.push('...');
+        pages.push(pageCount);
+      }
+
+      pages.forEach(page => {
+        if (page === '...') {
+          const dots = document.createElement('span');
+          dots.textContent = '...';
+          dots.classList.add('pagination__dots');
+          pagesContainer.appendChild(dots);
+        } else {
+          const pageLink = document.createElement('a');
+          pageLink.textContent = page;
+          pageLink.href = "#";
+          pageLink.classList.toggle('pagination__link--active', currentPage === page);
+          pageLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            changeCards(filteredCards, page, itemsPerPage);
+          });
+          pagesContainer.appendChild(pageLink);
+        }
+      });
+    };
+
+    previousPageButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (currentPage > 1) changeCards(filteredCards, currentPage - 1, itemsPerPage);
+    });
+
+    nextPageButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (currentPage < totalPages()) changeCards(filteredCards, currentPage + 1, itemsPerPage);
+    });
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      filteredCards = cards.filter(card =>
+        card.title.toLowerCase().includes(query) ||
+        card.description.toLowerCase().includes(query)
+      );
+      currentPage = 1;
+      changeCards(filteredCards, currentPage, itemsPerPage);
+    });
+
+    changeCards(filteredCards, currentPage, itemsPerPage);
+  </script>
+</body>
+</html>
